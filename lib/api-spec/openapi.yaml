@@ -1,0 +1,444 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: MediSync AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: medications
+    description: Medication management
+  - name: interactions
+    description: Drug interaction checking
+  - name: prescriptions
+    description: Prescription scanning and management
+  - name: alerts
+    description: Medication alerts
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /medications:
+    get:
+      operationId: getMedications
+      tags: [medications]
+      summary: Get all medications
+      responses:
+        "200":
+          description: List of medications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medication"
+    post:
+      operationId: addMedication
+      tags: [medications]
+      summary: Add a medication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMedicationRequest"
+      responses:
+        "201":
+          description: Medication added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+
+  /medications/{id}:
+    put:
+      operationId: updateMedication
+      tags: [medications]
+      summary: Update a medication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMedicationRequest"
+      responses:
+        "200":
+          description: Medication updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medication"
+    delete:
+      operationId: deleteMedication
+      tags: [medications]
+      summary: Delete a medication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Medication deleted
+
+  /interactions/check:
+    post:
+      operationId: checkInteractions
+      tags: [interactions]
+      summary: Check drug interactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckInteractionsRequest"
+      responses:
+        "200":
+          description: Interaction check results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InteractionCheckResult"
+
+  /prescriptions/analyze:
+    post:
+      operationId: analyzePrescription
+      tags: [prescriptions]
+      summary: Analyze a prescription text using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzePrescriptionRequest"
+      responses:
+        "200":
+          description: Prescription analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrescriptionAnalysisResult"
+
+  /alerts:
+    get:
+      operationId: getAlerts
+      tags: [alerts]
+      summary: Get all active alerts
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/{id}/dismiss:
+    post:
+      operationId: dismissAlert
+      tags: [alerts]
+      summary: Dismiss an alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Medication:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        timeOfDay:
+          type: string
+          enum: [morning, afternoon, evening, bedtime, as_needed]
+        startDate:
+          type: string
+        endDate:
+          type: string
+          nullable: true
+        prescribedBy:
+          type: string
+          nullable: true
+        condition:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - dosage
+        - frequency
+        - timeOfDay
+        - startDate
+        - active
+        - createdAt
+        - updatedAt
+
+    CreateMedicationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        timeOfDay:
+          type: string
+          enum: [morning, afternoon, evening, bedtime, as_needed]
+        startDate:
+          type: string
+        endDate:
+          type: string
+          nullable: true
+        prescribedBy:
+          type: string
+          nullable: true
+        condition:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - name
+        - dosage
+        - frequency
+        - timeOfDay
+        - startDate
+
+    UpdateMedicationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        timeOfDay:
+          type: string
+          enum: [morning, afternoon, evening, bedtime, as_needed]
+        startDate:
+          type: string
+        endDate:
+          type: string
+          nullable: true
+        prescribedBy:
+          type: string
+          nullable: true
+        condition:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+
+    CheckInteractionsRequest:
+      type: object
+      properties:
+        medicationIds:
+          type: array
+          items:
+            type: integer
+        medicationNames:
+          type: array
+          items:
+            type: string
+      required:
+        - medicationNames
+
+    InteractionCheckResult:
+      type: object
+      properties:
+        interactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DrugInteraction"
+        summary:
+          type: string
+        riskLevel:
+          type: string
+          enum: [none, low, moderate, high, critical]
+        recommendations:
+          type: array
+          items:
+            type: string
+      required:
+        - interactions
+        - summary
+        - riskLevel
+        - recommendations
+
+    DrugInteraction:
+      type: object
+      properties:
+        drug1:
+          type: string
+        drug2:
+          type: string
+        severity:
+          type: string
+          enum: [mild, moderate, severe, contraindicated]
+        description:
+          type: string
+        mechanism:
+          type: string
+          nullable: true
+        recommendation:
+          type: string
+      required:
+        - drug1
+        - drug2
+        - severity
+        - description
+        - recommendation
+
+    AnalyzePrescriptionRequest:
+      type: object
+      properties:
+        prescriptionText:
+          type: string
+        patientNotes:
+          type: string
+          nullable: true
+      required:
+        - prescriptionText
+
+    PrescriptionAnalysisResult:
+      type: object
+      properties:
+        extractedMedications:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedMedication"
+        interactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DrugInteraction"
+        warnings:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+      required:
+        - extractedMedications
+        - interactions
+        - warnings
+        - recommendations
+        - summary
+
+    ExtractedMedication:
+      type: object
+      properties:
+        name:
+          type: string
+        dosage:
+          type: string
+          nullable: true
+        frequency:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+      required:
+        - name
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [interaction, missed_dose, refill_reminder, general]
+        severity:
+          type: string
+          enum: [info, warning, danger, critical]
+        title:
+          type: string
+        message:
+          type: string
+        medicationIds:
+          type: array
+          items:
+            type: integer
+        dismissed:
+          type: boolean
+        createdAt:
+          type: string
+        dismissedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - type
+        - severity
+        - title
+        - message
+        - medicationIds
+        - dismissed
+        - createdAt
